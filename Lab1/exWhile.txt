@@ -1,0 +1,7 @@
+main() {
+	ceva = 's'
+	altceva = 2
+	while(ceva > 2) {
+        read(ceva)
+    }
+}
