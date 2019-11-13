@@ -118,7 +118,6 @@ def getTerminals(str):
     terminals = []
     for st in str:
         st = st.replace("|epsilon", "")
-        print(st)
         for s in st:
             if s in listOfLowerCase or s in listOfDigits:
                 terminals.append(s)
@@ -168,36 +167,38 @@ def getSetOfFinalStates(str):
 
 def fromRegularGrammarToFiniteAutomata(str):
     finiteAutomata = []
-    terminals = [" "] + getTerminals(str)  # lowerCase
+    terminals = [""] + getTerminals(str) + ["k"]  # lowerCase
     terminals_Dict = createDictFromList(getTerminals(str))
+    terminals_Dict["k"] = len(terminals) - 1
     nonTerminals = getNonTerminals(str)  # upperCase
     nonTerminals_Dict = createDictFromList(nonTerminals)
     finiteAutomata.append(terminals)
     for nonTerminal in nonTerminals:
-        finiteAutomata.append([nonTerminal] + ([""] * (len(terminals) - 1)))
+        finiteAutomata.append([nonTerminal] + (["∅"] * (len(terminals) - 1)))
     productions = getProductions(str)
+    initStates = ["S"]
+    finalStates = []
     for production in productions:
+        if any(x == "epsilon" for x in production.split("->")[1].split("|")):
+            finalStates.append(production.split("->")[0])
+    for production in productions:
+        production = production.replace("epsilon", "")
         for i in range(3, len(production) - 1):
+            if production[i] == "|" and production[i+1] in nonTerminals:
+                finiteAutomata[nonTerminals_Dict[production[0]]
+                               ][terminals_Dict[production[i+1]]] += production[i + 1]
             if production[i] in terminals:
                 if production[i + 1] in nonTerminals:
                     finiteAutomata[nonTerminals_Dict[production[0]]
                                    ][terminals_Dict[production[i]]] += production[i + 1]
                 elif production[i + 1] == '|':
                     finiteAutomata[nonTerminals_Dict[production[0]]
-                                   ][terminals_Dict[production[i]]] = 'epsilon'
+                                   ][terminals_Dict["k"]] += production[i]
         if production[len(production) - 1] in terminals:
             finiteAutomata[nonTerminals_Dict[production[0]]
-                           ][terminals_Dict[production[i + 1]]] = 'epsilon'
+                           ][terminals_Dict["k"]] = production[len(production) - 1]
     finiteAutomata = getTransitions(finiteAutomata)
-    return finiteAutomata
-
-
-# def frmRegToFinite(regularGrammar):
-#     finiteAutomata = []
-#     terminals = getTerminals(regularGrammar)
-#     terminals_Dict = createDictFromList(terminals)
-#     nonTerminals = getNonTerminals(regularGrammar)
-#     return terminals_Dict
+    return initStates, finalStates, finiteAutomata
 
 
 def fromFiniteAutomataToRegularGrammar(finiteAutomata, setOfFinalStates):
@@ -223,6 +224,7 @@ def checkIfRegularGrammar(regularGrammar):
     ok = False
     okEpsilon = False
     okInitial = True
+    okTerminalAfterNonTerminal = True
     setOfProductions = getProductions(regularGrammar)
     for production in setOfProductions:
         if "epsilon" in production:
@@ -230,7 +232,13 @@ def checkIfRegularGrammar(regularGrammar):
         if production.split("->")[0] != "S":
             if "S" in production:
                 okInitial = False
-    if okEpsilon and okInitial:
+        newProduction = production.split("->")[1]
+        newProduction = newProduction.replace("|epsilon", "")
+        for i in range(0, len(newProduction)-1):
+            if newProduction[i+1] != "|":
+                if newProduction[i].isupper() and newProduction[i+1].islower():
+                    okTerminalAfterNonTerminal = False
+    if okEpsilon and okInitial and okTerminalAfterNonTerminal:
         ok = True
     return "Is regular grammar" if ok else "Is not regular grammar"
 
@@ -252,7 +260,11 @@ def runRegularGrammarLogistics(regularGrammar):
             else:
                 print(getProductionsOfNonTerminal(regularGrammar, z))
         elif y == "5":
-            print(frmRegToFinite(regularGrammar))
+            initStates, finalStates, finiteAutomata = fromRegularGrammarToFiniteAutomata(
+                regularGrammar)
+            print("Init States: " + str(initStates))
+            print("Final States: " + str(finalStates))
+            print("Productions: \n" + str(finiteAutomata))
         elif y == "6":
             print(checkIfRegularGrammar(regularGrammar))
         elif y == "-1":
