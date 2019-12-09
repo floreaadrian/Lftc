@@ -1,0 +1,11 @@
+S,P,V,N,Q,C,A
+a,an,boy,dog,has
+S->P V
+P->a N
+N->boy
+N->dog
+V->Q C
+Q->has
+C->A N
+A->a
+A->an
