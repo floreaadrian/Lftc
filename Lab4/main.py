@@ -225,46 +225,6 @@ def findProduction(nonTerminal, terminal, rg):
     return (foundProduction, prodNumber + 1)
 
 
-def constructTable(rg, first, follow):
-    table = {}
-    terminals = getTerminals(rg)
-    terminals.remove("eps")
-    nonTerminals = getNonTerminals(rg)
-    terminals += "$"
-    combined = terminals + nonTerminals
-    for comb in combined:
-        if comb in nonTerminals:
-            if "eps" in first[comb]:
-                for ex in first[comb]:
-                    if ex != "eps":
-                        table[(ex, comb)] = findProduction(comb, ex, rg)
-                for ex in follow[comb]:
-                    if ex == "eps":
-                        table[("$", comb)] = findProduction(comb, ex, rg)
-                    else:
-                        table[(ex, comb)] = findProduction(comb, ex, rg)
-            else:
-                for ex in first[comb]:
-                    table[(ex, comb)] = findProduction(comb, ex, rg)
-            for terminal in terminals:
-                if terminal != "eps":
-                    if (terminal, comb) in table:
-                        pass
-                    else:
-                        table[(terminal, comb)] = "err"
-        else:
-            for terminal in terminals:
-                if terminal == "eps" or comb == "eps":
-                    pass
-                elif terminal == comb and terminal != "$":
-                    table[(terminal, comb)] = "pop"
-                elif terminal == comb:
-                    table[(terminal, comb)] = "acc"
-                else:
-                    table[(terminal, comb)] = "err"
-    return table
-
-
 def constructTableV2(rg, first, follow):
     table = {}
     terminals = getTerminals(rg)
@@ -281,14 +241,14 @@ def constructTableV2(rg, first, follow):
             if elem in terminals:
                 if (left, elem) in table:
                     raise Exception(
-                        "There is a ambiguance between %s and %s" % left, elem)
+                        "There is an ambiguous value between %s and %s" % (left, elem))
                 table[(left, elem)] = (right, i+1)
             else:
                 for fr in first[elem]:
                     if fr != "eps":
                         if (left, fr) in table:
                             raise Exception(
-                                "There is a ambiguance between %s and %s" % left, fr)
+                                "There is an ambiguous value between %s and %s" % (left, fr))
                         table[(left, fr)] = (right, i+1)
                     else:
                         epsInFirst = True
@@ -297,12 +257,12 @@ def constructTableV2(rg, first, follow):
                 if fr != "eps":
                     if (left, fr) in table:
                         raise Exception(
-                            "There is a ambiguance between %s and %s" % left, fr)
+                            "There is an ambiguous value between %s and %s" % (left, fr))
                     table[(left, fr)] = (right, i+1)
                 else:
                     if (left, "$") in table:
                         raise Exception(
-                            "There is a ambiguance between %s and $" % left)
+                            "There is an ambiguous value between %s and $" % left)
                     table[(left, "$")] = (right, i + 1)
     for terminal in terminals:
         for term2 in terminals:
