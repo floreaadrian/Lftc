@@ -279,18 +279,30 @@ def constructTableV2(rg, first, follow):
         elem = right[0]
         if elem != "eps":
             if elem in terminals:
+                if (left, elem) in table:
+                    raise Exception(
+                        "There is a ambiguance between %s and %s" % left, elem)
                 table[(left, elem)] = (right, i+1)
             else:
                 for fr in first[elem]:
                     if fr != "eps":
+                        if (left, fr) in table:
+                            raise Exception(
+                                "There is a ambiguance between %s and %s" % left, fr)
                         table[(left, fr)] = (right, i+1)
                     else:
                         epsInFirst = True
         else:
             for fr in follow[left]:
                 if fr != "eps":
+                    if (left, fr) in table:
+                        raise Exception(
+                            "There is a ambiguance between %s and %s" % left, fr)
                     table[(left, fr)] = (right, i+1)
                 else:
+                    if (left, "$") in table:
+                        raise Exception(
+                            "There is a ambiguance between %s and $" % left)
                     table[(left, "$")] = (right, i + 1)
     for terminal in terminals:
         for term2 in terminals:
@@ -312,7 +324,10 @@ def syntacticAnalysis(rg, table, seq):
         top_alfa = alfa[-1]
         top_beta = beta[-1]
         top_pi = pi[-1]
-        # print(alfa, beta, pi)
+        print("-"*30)
+        print(alfa)
+        print(beta)
+        print(pi)
         if (top_beta, top_alfa) in table:
             if table[(top_beta, top_alfa)] == "pop":
                 alfa.pop()
@@ -333,6 +348,7 @@ def syntacticAnalysis(rg, table, seq):
             beta.pop()
         else:
             break
+
     if isAccepted == True:
         return True, pi
     else:
@@ -365,11 +381,11 @@ def writeFromResult(rg, result):
     return rewr
 
 
-rg = readRegularGrammarFromFile("rg2.txt")
+rg = readRegularGrammarFromFile("miniLang.txt")
 first = constructFirst(rg)
 follow = constructFollow(rg, first)
 table = constructTableV2(rg, first, follow)
-# print(table)
+print(table)
 isAccepted, result = syntacticAnalysis(rg, table, getSeq(rg))
 print(isAccepted, result)
 if isAccepted:

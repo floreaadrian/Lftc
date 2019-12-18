@@ -1,12 +1,12 @@
-program,simpleStmt,compseq,assignstmt,expression,factor,iostmt,condstmt,ifstmt,whilestmt,condition,identifier,constant,letter,digit,relation,operator,char,int,digit,sign,non-zero-digit,sequence-of-digits
-eps,main,(,),{,},[,],read,write,if,else,while,+,-,*,/,%,#,;,<,>,=,<=,>=,==
+program,simpleStmt,compseq,assignstmt,expression,factor,iostmt,condstmt,ifstmt,whilestmt,condition,identifier,constant,letter,digit,relation,operator,digit,sign,non-zero-digit,sequence-of-digits
+eps,main,(,),{,},[,],read,write,if,else,while,+,-,*,/,%,#,;,<,>,=,<=,>=,==,int,char
 program
-program->main ( ) { compseq } 
+program->main { compseq } 
 simpleStmt->assignstmt
 simpleStmt->iostmt
 simpleStmt->condstmt
-compseq->simpleStmt
-compseq->compseq
+compseq->simpleStmt compseq
+compseq->eps
 assignstmt->identifier = expression
 expression->factor
 expression->factor operator expression
@@ -16,15 +16,13 @@ iostmt->read identifier
 iostmt->write identifier
 iostmt->write constant
 condstmt->ifstmt
-condstmt->whilestmt
 ifstmt->if ( condition ) { compseq }
-whilestmt->while ( condition ) { compseq }
 condition->expression relation expression 
-identifier->letter
-identifier->letter digit
-identifier->digit letter
+identifier->char
+identifier->eps
 constant->int
 constant->char
+constant->eps
 relation-><
 relation-><=
 relation->==
@@ -35,4 +33,4 @@ operator->-
 operator->*
 operator->/
 operator->%
-ve
+main { if ( char = char ) { } }
