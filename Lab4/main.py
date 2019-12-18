@@ -30,16 +30,26 @@ def readRegularGrammarFromFile(filename):
     return regularGrammar
 
 
-def getNonTerminals(gr):
-    return list(set(gr[0].split(",")))
+def getNonTerminals(rg):
+    return list(set(rg[0].split(",")))
 
 
-def getTerminals(gr):
-    return list(set(gr[1].split(",")))
+def getTerminals(rg):
+    return list(set(rg[1].split(",")))
 
 
-def getProductions(gr):
-    return gr[2:]
+def getProductions(rg):
+    newOne = rg[3:]
+    newOne.pop()
+    return newOne
+
+
+def getStartingSymbol(rg):
+    return rg[2]
+
+
+def getSeq(rg):
+    return rg[-1].split(" ")
 
 
 def divideProduction(prod):
@@ -105,7 +115,7 @@ def constructFirst(rg):
     return nextFirst
 
 
-def getProductinosContainingNonTerminal(rg, nonTerminal):
+def getProductionsContainingNonTerminal(rg, nonTerminal):
     listToReturn = []
     nonTerminals = getNonTerminals(rg)
     productions = getProductions(rg)
@@ -179,7 +189,7 @@ def constructFollowRule(rg, first, followBefore):
     productions = getProductions(rg)
     follow = createDictionaryFromNonTerminals(nonTerminals)
     for i in nonTerminals:
-        prodFoundIn = getProductinosContainingNonTerminal(rg, i)
+        prodFoundIn = getProductionsContainingNonTerminal(rg, i)
         follow[i] += applyRulesOnProds(prodFoundIn, followBefore, first,
                                        i, terminals)
         follow[i] = list(set(follow[i]))
@@ -196,9 +206,173 @@ def constructFollow(rg, first):
     while not checkIfDictsAreEqual(firstFollow, nextFollow):
         firstFollow = copy.deepcopy(nextFollow)
         nextFollow = constructFollowRule(rg, first, firstFollow)
-    print(nextFollow)
+    return nextFollow
 
 
-rg = readRegularGrammarFromFile("rg1.txt")
+def findProduction(nonTerminal, terminal, rg):
+    foundProduction = ""
+    prodNumber = 0
+    productions = getProductions(rg)
+    for i in range(len(productions)):
+        left, right = divideProduction(productions[i])
+        if left == nonTerminal:
+            if foundProduction == "":
+                foundProduction = right
+                prodNumber = i
+            if terminal in right:
+                foundProduction = right
+                prodNumber = i
+    return (foundProduction, prodNumber + 1)
+
+
+def constructTable(rg, first, follow):
+    table = {}
+    terminals = getTerminals(rg)
+    terminals.remove("eps")
+    nonTerminals = getNonTerminals(rg)
+    terminals += "$"
+    combined = terminals + nonTerminals
+    for comb in combined:
+        if comb in nonTerminals:
+            if "eps" in first[comb]:
+                for ex in first[comb]:
+                    if ex != "eps":
+                        table[(ex, comb)] = findProduction(comb, ex, rg)
+                for ex in follow[comb]:
+                    if ex == "eps":
+                        table[("$", comb)] = findProduction(comb, ex, rg)
+                    else:
+                        table[(ex, comb)] = findProduction(comb, ex, rg)
+            else:
+                for ex in first[comb]:
+                    table[(ex, comb)] = findProduction(comb, ex, rg)
+            for terminal in terminals:
+                if terminal != "eps":
+                    if (terminal, comb) in table:
+                        pass
+                    else:
+                        table[(terminal, comb)] = "err"
+        else:
+            for terminal in terminals:
+                if terminal == "eps" or comb == "eps":
+                    pass
+                elif terminal == comb and terminal != "$":
+                    table[(terminal, comb)] = "pop"
+                elif terminal == comb:
+                    table[(terminal, comb)] = "acc"
+                else:
+                    table[(terminal, comb)] = "err"
+    return table
+
+
+def constructTableV2(rg, first, follow):
+    table = {}
+    terminals = getTerminals(rg)
+    terminals.remove("eps")
+    nonTerminals = getNonTerminals(rg)
+    terminals += "$"
+    combined = terminals + nonTerminals
+    productions = getProductions(rg)
+    for i in range(len(productions)):
+        epsInFirst = False
+        left, right = divideProduction(productions[i])
+        elem = right[0]
+        if elem != "eps":
+            if elem in terminals:
+                table[(left, elem)] = (right, i+1)
+            else:
+                for fr in first[elem]:
+                    if fr != "eps":
+                        table[(left, fr)] = (right, i+1)
+                    else:
+                        epsInFirst = True
+        else:
+            for fr in follow[left]:
+                if fr != "eps":
+                    table[(left, fr)] = (right, i+1)
+                else:
+                    table[(left, "$")] = (right, i + 1)
+    for terminal in terminals:
+        for term2 in terminals:
+            if terminal == term2 and terminal == "$":
+                table[(terminal, terminal)] = "acc"
+            elif terminal == term2:
+                table[(terminal, terminal)] = "pop"
+    return table
+
+
+def syntacticAnalysis(rg, table, seq):
+    alfa = copy.deepcopy(seq)
+    alfa.append("$")
+    alfa.reverse()
+    beta = ["$", getStartingSymbol(rg)]
+    pi = ["eps"]
+    isAccepted = False
+    while True:
+        top_alfa = alfa[-1]
+        top_beta = beta[-1]
+        top_pi = pi[-1]
+        # print(alfa, beta, pi)
+        if (top_beta, top_alfa) in table:
+            if table[(top_beta, top_alfa)] == "pop":
+                alfa.pop()
+                beta.pop()
+            elif table[(top_beta, top_alfa)] == "acc":
+                beta.pop()
+                isAccepted = True
+                break
+            else:
+                b, i = table[(top_beta, top_alfa)]
+                b = copy.deepcopy(b)
+                beta.pop()
+                b.reverse()
+                if b[0] != "eps":
+                    beta += b
+                pi.append(i)
+        elif top_beta == "$":
+            beta.pop()
+        else:
+            break
+    if isAccepted == True:
+        return True, pi
+    else:
+        return False, []
+
+
+def writeFromResult(rg, result):
+    productions = getProductions(rg)
+    nonTerminals = getNonTerminals(rg)
+    result.reverse()
+    result.pop()
+    left, right = divideProduction(productions[result[-1] - 1])
+    rewr = right
+    while(len(result) > 0):
+        top_result = result[-1] - 1
+        found = False
+        left, right = divideProduction(productions[top_result])
+        for j in range(len(rewr)):
+            if rewr[j] == left:
+                if right == ["eps"]:
+                    del rewr[j]
+                    found = True
+                    break
+                else:
+                    del rewr[j]
+                    rewr[j:j] = right
+                    found = True
+                    break
+        result.pop()
+    return rewr
+
+
+rg = readRegularGrammarFromFile("rg2.txt")
 first = constructFirst(rg)
 follow = constructFollow(rg, first)
+table = constructTableV2(rg, first, follow)
+# print(table)
+isAccepted, result = syntacticAnalysis(rg, table, getSeq(rg))
+print(isAccepted, result)
+if isAccepted:
+    rewriten = writeFromResult(rg, result)
+    print(rewriten)
+    print(" ".join(rewriten))

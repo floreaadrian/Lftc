@@ -1,0 +1,38 @@
+program,simpleStmt,compseq,assignstmt,expression,factor,iostmt,condstmt,ifstmt,whilestmt,condition,identifier,constant,letter,digit,relation,operator,char,int,digit,sign,non-zero-digit,sequence-of-digits
+eps,main,(,),{,},[,],read,write,if,else,while,+,-,*,/,%,#,;,<,>,=,<=,>=,==
+program
+program->main ( ) { compseq } 
+simpleStmt->assignstmt
+simpleStmt->iostmt
+simpleStmt->condstmt
+compseq->simpleStmt
+compseq->compseq
+assignstmt->identifier = expression
+expression->factor
+expression->factor operator expression
+factor->identifier
+factor->constant
+iostmt->read identifier
+iostmt->write identifier
+iostmt->write constant
+condstmt->ifstmt
+condstmt->whilestmt
+ifstmt->if ( condition ) { compseq }
+whilestmt->while ( condition ) { compseq }
+condition->expression relation expression 
+identifier->letter
+identifier->letter digit
+identifier->digit letter
+constant->int
+constant->char
+relation-><
+relation-><=
+relation->==
+relation->>=
+relation->>
+operator->+
+operator->-
+operator->*
+operator->/
+operator->%
+ve

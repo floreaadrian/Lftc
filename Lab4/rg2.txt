@@ -1,0 +1,13 @@
+S,C,E,R,I,T
+eps,if,then,else,id,const,:=,=,<>
+S
+S->if C then I T
+T->eps
+T->else I
+C->E R E
+E->id
+E->const
+R->=
+R-><>
+I->id := E
+if id = id then id := const

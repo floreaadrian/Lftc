@@ -1,5 +1,6 @@
 S,A,B,C,D
 eps,+,a,*,(,)
+S
 S->B A
 A->+ B A
 A->eps
@@ -8,3 +9,4 @@ C->* D C
 C->eps
 D->( S )
 D->a
+a * ( a + a )
