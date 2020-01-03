@@ -241,14 +241,14 @@ def constructTableV2(rg, first, follow):
             if elem in terminals:
                 if (left, elem) in table:
                     raise Exception(
-                        "There is an ambiguous value between %s and %s" % (left, elem))
+                        "There is an ambiguous value between %s and %s from %s" % (left, elem, right))
                 table[(left, elem)] = (right, i+1)
             else:
                 for fr in first[elem]:
                     if fr != "eps":
                         if (left, fr) in table:
                             raise Exception(
-                                "There is an ambiguous value between %s and %s" % (left, fr))
+                                "There is an ambiguous value between %s and %s from %s" % (left, fr, right))
                         table[(left, fr)] = (right, i+1)
                     else:
                         epsInFirst = True
@@ -257,12 +257,12 @@ def constructTableV2(rg, first, follow):
                 if fr != "eps":
                     if (left, fr) in table:
                         raise Exception(
-                            "There is an ambiguous value between %s and %s" % (left, fr))
+                            "There is an ambiguous value between %s and %s from %s" % (left, fr, right))
                     table[(left, fr)] = (right, i+1)
                 else:
                     if (left, "$") in table:
                         raise Exception(
-                            "There is an ambiguous value between %s and $" % left)
+                            "There is an ambiguous value between %s and $ from %s" % (left, right))
                     table[(left, "$")] = (right, i + 1)
     for terminal in terminals:
         for term2 in terminals:
@@ -321,6 +321,7 @@ def writeFromResult(rg, result):
     result.reverse()
     result.pop()
     left, right = divideProduction(productions[result[-1] - 1])
+    print(left)
     rewr = right
     while(len(result) > 0):
         top_result = result[-1] - 1
@@ -338,6 +339,7 @@ def writeFromResult(rg, result):
                     found = True
                     break
         result.pop()
+        print(rewr)
     return rewr
 
 
@@ -345,7 +347,7 @@ rg = readRegularGrammarFromFile("miniLang.txt")
 first = constructFirst(rg)
 follow = constructFollow(rg, first)
 table = constructTableV2(rg, first, follow)
-print(table)
+# print(table)
 isAccepted, result = syntacticAnalysis(rg, table, getSeq(rg))
 print(isAccepted, result)
 if isAccepted:

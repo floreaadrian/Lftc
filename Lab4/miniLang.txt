@@ -1,36 +1,24 @@
-program,simpleStmt,compseq,assignstmt,expression,factor,iostmt,condstmt,ifstmt,whilestmt,condition,identifier,constant,letter,digit,relation,operator,digit,sign,non-zero-digit,sequence-of-digits
-eps,main,(,),{,},[,],read,write,if,else,while,+,-,*,/,%,#,;,<,>,=,<=,>=,==,int,char
+program,simpleStmt,compseq,assignstmt,Y,expression,factor,condstmt,condition,identifier,constant,letter,digit,relation,operator,digit,sign,non-zero-digit,sequence-of-digits,X
+eps,0,1,6,7,10,11,12,13,14,17,18,19,20,21,23,24,25,16
 program
-program->main { compseq } 
-simpleStmt->assignstmt
-simpleStmt->iostmt
-simpleStmt->condstmt
-compseq->simpleStmt compseq
+program->7 17 compseq 18 
+compseq->simpleStmt
 compseq->eps
-assignstmt->identifier = expression
-expression->factor
-expression->factor operator expression
+simpleStmt->condstmt
+simpleStmt->assignstmt
+condstmt->6 19 condition 20 17 compseq 18
+assignstmt->identifier 25 constant
+condition->constant relation factor
 factor->identifier
 factor->constant
-iostmt->read identifier
-iostmt->write identifier
-iostmt->write constant
-condstmt->ifstmt
-ifstmt->if ( condition ) { compseq }
-condition->expression relation expression 
-identifier->char
-identifier->eps
-constant->int
-constant->char
-constant->eps
-relation-><
-relation-><=
-relation->==
-relation->>=
-relation->>
-operator->+
-operator->-
-operator->*
-operator->/
-operator->%
-main { if ( char = char ) { } }
+identifier->0
+constant->1
+relation->23
+relation->25
+relation->24
+operator->10
+operator->11
+operator->12
+operator->13
+operator->14
+7 17 6 19 1 25 0 20 17 18 18
